@@ -135,7 +135,8 @@ func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
 	}
 }
 
-func dumpEntry(rules map[string]*Rule, name string, w io.Writer) {
+func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
+	useTest := false
 	fmt.Fprintf(w, ":\"%s\"\n", name)
 	rule := rules[name]
 	if len(rule.Sources) > 0 {
@@ -144,6 +145,7 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) {
 				fmt.Fprintf(w, "  call :\"%s\"\n", source1)
 			}
 		}
+		useTest = true
 		fmt.Fprintf(w, "  call :test %s %s\n", rule.Target, strings.Join(rule.Sources, " "))
 		fmt.Fprintf(w, "  if errorlevel 1 (\n")
 		dumpCode(rules, rule, 4, w)
@@ -152,6 +154,7 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) {
 		dumpCode(rules, rule, 2, w)
 	}
 	fmt.Fprintln(w, "  exit /b")
+	return useTest
 }
 
 func dumpTools(w io.Writer) {
@@ -217,11 +220,16 @@ func main1(args []string) error {
 	fmt.Fprintf(w, "  call :\"%s\"\n", firstentry)
 	fmt.Fprintln(w, "  exit /b")
 
+	useTest := false
 	for key := range rules {
 		fmt.Fprintln(w)
-		dumpEntry(rules, key, w)
+		if dumpEntry(rules, key, w) {
+			useTest = true
+		}
 	}
-	dumpTools(w)
+	if useTest {
+		dumpTools(w)
+	}
 	fmt.Fprintln(w)
 	return nil
 }

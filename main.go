@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/mattn/go-isatty"
+
+	"github.com/zetamatta/go-texts/mbcs"
 )
 
 type Rule struct {
@@ -33,7 +37,7 @@ func parseMakefile(macro map[string]string) (map[string]*Rule, string, error) {
 	var current *Rule
 	firstentry := ""
 
-	sc := bufio.NewScanner(fd)
+	sc := bufio.NewScanner(mbcs.NewAutoDetectReader(fd, mbcs.ACP))
 	contline := ""
 	for sc.Scan() {
 		text := sc.Text()
@@ -180,18 +184,42 @@ func main1(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "@echo off\n")
-	fmt.Fprintf(os.Stdout, "call :\"%%1\"\n")
-	fmt.Fprintf(os.Stdout, "exit /b\n")
-	fmt.Fprintf(os.Stdout, ":\"\"\n")
-	fmt.Fprintf(os.Stdout, "  call :\"%s\"\n", firstentry)
-	fmt.Fprintf(os.Stdout, "  exit /b\n")
+
+	var w io.Writer = os.Stdout
+	if !isatty.IsTerminal(os.Stdout.Fd()) {
+		var r io.Reader
+		r, w = io.Pipe()
+		go func() {
+			sc := bufio.NewScanner(r)
+			for sc.Scan() {
+				text, err := mbcs.UtoA(sc.Text(), mbcs.ACP, true)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err.Error())
+				} else {
+					os.Stdout.Write(text)
+					os.Stdout.Write([]byte{'\r', '\n'})
+				}
+			}
+			if err := sc.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+			}
+			os.Stdout.Sync()
+		}()
+	}
+
+	fmt.Fprintf(w, "@echo off\n")
+	fmt.Fprintf(w, "call :\"%%1\"\n")
+	fmt.Fprintf(w, "exit /b\n")
+	fmt.Fprintf(w, ":\"\"\n")
+	fmt.Fprintf(w, "  call :\"%s\"\n", firstentry)
+	fmt.Fprintf(w, "  exit /b\n")
 
 	for key := range rules {
-		fmt.Fprintln(os.Stdout)
-		dumpEntry(rules, key, os.Stdout)
+		fmt.Fprintln(w)
+		dumpEntry(rules, key, w)
 	}
-	dumpTools(os.Stdout)
+	dumpTools(w)
+	fmt.Fprintln(w)
 	return nil
 }
 

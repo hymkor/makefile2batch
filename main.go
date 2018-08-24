@@ -207,12 +207,15 @@ func main1(args []string) error {
 		}()
 	}
 
-	fmt.Fprintf(w, "@echo off\n")
-	fmt.Fprintf(w, "call :\"%%1\"\n")
-	fmt.Fprintf(w, "exit /b\n")
-	fmt.Fprintf(w, ":\"\"\n")
+	fmt.Fprintln(w, "@echo off")
+	fmt.Fprintln(w, "setlocal")
+	fmt.Fprintln(w, `set "MAKEDIR=%CD%"`)
+	fmt.Fprintln(w, `call :"%1"`)
+	fmt.Fprintln(w, `endlocal`)
+	fmt.Fprintln(w, `exit /b`)
+	fmt.Fprintln(w, `:""`)
 	fmt.Fprintf(w, "  call :\"%s\"\n", firstentry)
-	fmt.Fprintf(w, "  exit /b\n")
+	fmt.Fprintln(w, "  exit /b")
 
 	for key := range rules {
 		fmt.Fprintln(w)

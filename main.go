@@ -191,24 +191,8 @@ func main1(args []string) error {
 
 	var w io.Writer = os.Stdout
 	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		var r io.Reader
-		r, w = io.Pipe()
-		go func() {
-			sc := bufio.NewScanner(r)
-			for sc.Scan() {
-				text, err := mbcs.UtoA(sc.Text(), mbcs.ACP, true)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err.Error())
-				} else {
-					os.Stdout.Write(text)
-					os.Stdout.Write([]byte{'\r', '\n'})
-				}
-			}
-			if err := sc.Err(); err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-			}
-			os.Stdout.Sync()
-		}()
+		w = mbcs.NewWriter(os.Stdout, mbcs.ACP)
+		os.Stdout.Sync()
 	}
 
 	fmt.Fprintln(w, "@echo off")

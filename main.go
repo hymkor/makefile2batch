@@ -160,6 +160,7 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
 func dumpTools(w io.Writer) {
 	io.WriteString(w, `
 :test
+  if not exist "%~1" exit /b 1
   if "%~2" == "" exit /b 1
   setlocal
   for /F %%I in ('forfiles /M "%~1" /C "cmd /c echo @fdate-@ftime"') do (

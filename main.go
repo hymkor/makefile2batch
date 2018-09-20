@@ -163,13 +163,10 @@ func dumpTools(w io.Writer) {
   if not exist "%~1" exit /b 1
   if "%~2" == "" exit /b 1
   setlocal
-  for /F %%I in ('forfiles /M "%~1" /C "cmd /c echo @fdate-@ftime"') do (
-    set "TARGET=%%I"
-  )
+  for /F "tokens=2,3" %%I in ('where /T "%~1"') do set "TARGET=%%I-%%J"
+
 :each_source
-  for /F %%I in ('forfiles /M "%~2" /C "cmd /c echo @fdate-@ftime"') do (
-    set "SOURCE=%%I"
-  )
+  for /F "tokens=2,3" %%I in ('where /T "%~2"') do set "SOURCE=%%I-%%J"
   if "%SOURCE%" gtr "%TARGET%" exit /b 1
   shift
   if not "%~2" == "" goto :each_source

@@ -128,10 +128,15 @@ func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
 			code1 = strings.Replace(code1, "$<", rule.Sources[0], -1)
 			code1 = strings.Replace(code1, "$^", strings.Join(rule.Sources, " "), -1)
 		}
-		for i := 0; i < indent; i++ {
-			fmt.Fprint(w, " ")
-		}
-		fmt.Fprintln(w, code1)
+		indents := strings.Repeat(" ", indent)
+		echo := strings.Replace(code1, "^", "^^", -1)
+		echo = strings.Replace(echo, ">", "^>", -1)
+		echo = strings.Replace(echo, "<", "^<", -1)
+		echo = strings.Replace(echo, "&", "^&", -1)
+		echo = strings.Replace(echo, "%", "%%", -1)
+		echo = strings.Replace(echo, "\"", "^\"", -1)
+		fmt.Fprintf(w, "%secho %s\n", indents, echo)
+		fmt.Fprintf(w, "%s%s\n", indents, code1)
 	}
 }
 
@@ -147,9 +152,8 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
 		}
 		useTest = true
 		fmt.Fprintf(w, "  call :test %s %s\n", rule.Target, strings.Join(rule.Sources, " "))
-		fmt.Fprintf(w, "  if errorlevel 1 (\n")
-		dumpCode(rules, rule, 4, w)
-		fmt.Fprintf(w, "  )\n")
+		fmt.Fprintf(w, "  if not errorlevel 1 exit /b\n")
+		dumpCode(rules, rule, 2, w)
 	} else {
 		dumpCode(rules, rule, 2, w)
 	}

@@ -24,11 +24,10 @@ type Rule struct {
 
 var rxMacro = regexp.MustCompile(`\$[\(\{]\w+[\{\)]`)
 var rxPattern = regexp.MustCompile(`^(\.\w+)(\.\w+)$`)
-
 var makefilePath = flag.String("f", "Makefile", "path of Makefile")
 
-func parseMakefile(macro map[string]string) (map[string]*Rule, string, error) {
-	fd, err := os.Open(*makefilePath)
+func parse(makefile string, macro map[string]string) (map[string]*Rule, string, error) {
+	fd, err := os.Open(makefile)
 	if err != nil {
 		return nil, "", err
 	}
@@ -181,7 +180,7 @@ func main1(args []string) error {
 			macro[arg[:pos]] = arg[pos+1:]
 		}
 	}
-	rules, firstentry, err := parseMakefile(macro)
+	rules, firstentry, err := parse(*makefilePath, macro)
 	if err != nil {
 		return err
 	}

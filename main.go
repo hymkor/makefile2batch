@@ -121,6 +121,8 @@ func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
 		}
 	}
 	noextTarget := rule.Target[:len(rule.Target)-len(filepath.Ext(rule.Target))]
+	indents := strings.Repeat(" ", indent)
+	fmt.Fprintf(w, "%s@echo on\n", indents)
 	for _, code1 := range rule.Code {
 		code1 = strings.Replace(code1, "$@", rule.Target, -1)
 		code1 = strings.Replace(code1, "$*", noextTarget, -1)
@@ -128,16 +130,9 @@ func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
 			code1 = strings.Replace(code1, "$<", rule.Sources[0], -1)
 			code1 = strings.Replace(code1, "$^", strings.Join(rule.Sources, " "), -1)
 		}
-		indents := strings.Repeat(" ", indent)
-		echo := strings.Replace(code1, "^", "^^", -1)
-		echo = strings.Replace(echo, ">", "^>", -1)
-		echo = strings.Replace(echo, "<", "^<", -1)
-		echo = strings.Replace(echo, "&", "^&", -1)
-		echo = strings.Replace(echo, "%", "%%", -1)
-		echo = strings.Replace(echo, "\"", "^\"", -1)
-		fmt.Fprintf(w, "%secho %s\n", indents, echo)
 		fmt.Fprintf(w, "%s%s\n", indents, code1)
 	}
+	fmt.Fprintf(w, "%s@echo off\n", indents)
 }
 
 func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
@@ -176,8 +171,7 @@ func dumpTools(w io.Writer) {
   if "%SOURCE%" gtr "%TARGET%" exit /b 1
   shift
   if not "%~2" == "" goto :each_source
-  endlocal & exit /b 0
-`)
+  endlocal & exit /b 0`)
 }
 
 func main1(args []string) error {
@@ -204,6 +198,7 @@ func main1(args []string) error {
 	fmt.Fprintln(w, "rem *** ( https://github.com/zetamatta/makefile2batch )")
 	fmt.Fprintln(w, "rem ***")
 	fmt.Fprintln(w, "setlocal")
+	fmt.Fprintln(w, `set "PROMPT=$$ "`)
 	fmt.Fprintln(w, `set "MAKEDIR=%CD%"`)
 	fmt.Fprintln(w, `call :"%1"`)
 	fmt.Fprintln(w, `endlocal`)

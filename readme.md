@@ -38,6 +38,9 @@ readme:
 clean:
 	if exist make.cmd del make.cmd
 	if exist makefile2batch.exe del makefile2batch.exe
+
+upgrade:
+	for /F %%I in ('where $(TARGET)') do copy /-Y /v "$(TARGET)" "%%I"
 ```
 
 ### make.cmd created by `makefile2batch > make.cmd`
@@ -58,6 +61,7 @@ exit /b
   exit /b
 
 :"clean"
+  if exist "clean" exit /b
   @echo on
   if exist make.cmd del make.cmd
   if exist makefile2batch.exe del makefile2batch.exe
@@ -73,20 +77,29 @@ exit /b
   exit /b
 
 :"readme"
+  if exist "readme" exit /b
   @echo on
   gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md
   @echo off
   exit /b
 
 :"test"
+  if exist "test" exit /b
   @echo on
   makefile2batch > make.cmd
   @echo off
   exit /b
 
+:"upgrade"
+  if exist "upgrade" exit /b
+  @echo on
+  for /F %%I in ('where makefile2batch.exe') do copy /-Y /v "makefile2batch.exe" "%%I"
+  @echo off
+  exit /b
+
 :test
   if not exist "%~1" exit /b 1
-  if "%~2" == "" exit /b 1
+  if "%~2" == "" exit /b 0
   setlocal
   for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do set TARGET=%%I_%%J
   echo %TARGET% | findstr _[0-9]: > nul && set TARGET=%TARGET:_=_0%

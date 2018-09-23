@@ -22,14 +22,19 @@ type Rule struct {
 	Code    []string
 }
 
+type MakeRules struct {
+	Rules        map[string]*Rule
+	DefaultEntry string
+}
+
 var rxMacro = regexp.MustCompile(`\$[\(\{]\w+[\{\)]`)
 var rxPattern = regexp.MustCompile(`^(\.\w+)(\.\w+)$`)
 var makefilePath = flag.String("f", "Makefile", "path of Makefile")
 
-func parse(makefile string, macro map[string]string) (map[string]*Rule, string, error) {
+func parse(makefile string, macro map[string]string) (*MakeRules, error) {
 	fd, err := os.Open(makefile)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	defer fd.Close()
 
@@ -67,7 +72,7 @@ func parse(makefile string, macro map[string]string) (map[string]*Rule, string, 
 
 		if text[0] == '\t' {
 			if current == nil {
-				return nil, "", fmt.Errorf("no current target")
+				return nil, fmt.Errorf("no current target")
 			}
 			text = text[1:]
 			if len(text) > 0 && text[0] == '-' {
@@ -90,7 +95,7 @@ func parse(makefile string, macro map[string]string) (map[string]*Rule, string, 
 		if pos := strings.IndexRune(text, ':'); pos >= 0 {
 			targets := strings.Fields(text[:pos])
 			if len(targets) != 1 {
-				return nil, firstentry, fmt.Errorf("none or multi targets")
+				return &MakeRules{nil, firstentry}, fmt.Errorf("none or multi targets")
 			}
 			sources := strings.Fields(text[pos+1:])
 			current = &Rule{
@@ -108,12 +113,13 @@ func parse(makefile string, macro map[string]string) (map[string]*Rule, string, 
 			macro[text[:pos]] = text[pos+1:]
 			continue
 		}
-		return nil, firstentry, fmt.Errorf("Syntax Error: %s", text)
+		return &MakeRules{nil, firstentry}, fmt.Errorf("Syntax Error: %s", text)
 	}
-	return rules, firstentry, sc.Err()
+	return &MakeRules{rules, firstentry}, sc.Err()
 }
 
-func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
+func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
+	rules := this.Rules
 	if len(rule.Code) <= 0 && len(rule.Sources) >= 1 {
 		newtarget := filepath.Ext(rule.Sources[0]) + filepath.Ext(rule.Target)
 		if r, ok := rules[newtarget]; ok {
@@ -135,7 +141,8 @@ func dumpCode(rules map[string]*Rule, rule *Rule, indent int, w io.Writer) {
 	fmt.Fprintf(w, "%s@echo off\n", indents)
 }
 
-func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
+func (this *MakeRules) DumpEntry(name string, w io.Writer) bool {
+	rules := this.Rules
 	useTest := false
 	fmt.Fprintf(w, ":\"%s\"\n", name)
 	rule := rules[name]
@@ -147,9 +154,9 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
 		}
 		useTest = true
 		fmt.Fprintf(w, "  call :test %s %s && exit /b\n", rule.Target, strings.Join(rule.Sources, " "))
-		dumpCode(rules, rule, 2, w)
+		this.dumpCode(rule, 2, w)
 	} else {
-		dumpCode(rules, rule, 2, w)
+		this.dumpCode(rule, 2, w)
 	}
 	fmt.Fprintln(w, "  exit /b")
 	return useTest
@@ -180,7 +187,7 @@ func main1(args []string) error {
 			macro[arg[:pos]] = arg[pos+1:]
 		}
 	}
-	rules, firstentry, err := parse(*makefilePath, macro)
+	makerules, err := parse(*makefilePath, macro)
 	if err != nil {
 		return err
 	}
@@ -203,18 +210,18 @@ func main1(args []string) error {
 	fmt.Fprintln(w, `endlocal`)
 	fmt.Fprintln(w, `exit /b`)
 	fmt.Fprintln(w, `:""`)
-	fmt.Fprintf(w, "  call :\"%s\"\n", firstentry)
+	fmt.Fprintf(w, "  call :\"%s\"\n", makerules.DefaultEntry)
 	fmt.Fprintln(w, "  exit /b")
 
 	useTest := false
-	keys := make([]string, 0, len(rules))
-	for key := range rules {
+	keys := make([]string, 0, len(makerules.Rules))
+	for key := range makerules.Rules {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
 		fmt.Fprintln(w)
-		if dumpEntry(rules, key, w) {
+		if makerules.DumpEntry(key, w) {
 			useTest = true
 		}
 	}

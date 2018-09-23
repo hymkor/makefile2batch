@@ -1,4 +1,6 @@
-makefile2batch.exe : main.go
+TARGET=makefile2batch.exe
+
+$(TARGET): main.go
 	go fmt
 	go build -o $@ -ldflags "-s -w"
 

@@ -4,7 +4,7 @@ makefile2batch
 Makefile to Batchfile converter.
 
 ```
-$ makefile2batch [-f Makefile] > make.cmd
+$ makefile2batch [-f Makefile] {MACRO=VALUE} > make.cmd
 ```
 
 Supported Macros
@@ -22,7 +22,9 @@ Sample
 ### Source
 
 ```Makefile
-makefile2batch.exe : main.go
+TARGET=makefile2batch.exe
+
+$(TARGET): main.go
 	go fmt
 	go build -o $@ -ldflags "-s -w"
 
@@ -55,17 +57,18 @@ exit /b
   call :"makefile2batch.exe"
   exit /b
 
+:"clean"
+  @echo on
+  if exist make.cmd del make.cmd
+  if exist makefile2batch.exe del makefile2batch.exe
+  @echo off
+  exit /b
+
 :"makefile2batch.exe"
   call :test makefile2batch.exe main.go && exit /b
   @echo on
   go fmt
   go build -o makefile2batch.exe -ldflags "-s -w"
-  @echo off
-  exit /b
-
-:"test"
-  @echo on
-  makefile2batch > make.cmd
   @echo off
   exit /b
 
@@ -75,10 +78,9 @@ exit /b
   @echo off
   exit /b
 
-:"clean"
+:"test"
   @echo on
-  if exist make.cmd del make.cmd
-  if exist makefile2batch.exe del makefile2batch.exe
+  makefile2batch > make.cmd
   @echo off
   exit /b
 

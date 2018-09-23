@@ -167,24 +167,12 @@ func dumpTools(w io.Writer) {
   if not exist "%~1" exit /b 1
   if "%~2" == "" exit /b 1
   setlocal
-  for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do (
-	  echo %%J | findstr ^[0-9]: > nul
-	  if errorlevel 1 (
-		set TARGET=%%I-%%J
-	) else (
-		set TARGET=%%I-0%%J
-	)
-  )
+  for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do set TARGET=%%I_%%J
+  echo %TARGET% | findstr _[0-9]: > nul && set TARGET=%TARGET:_=_0%
 
 :each_source
-  for /F "tokens=2,3" %%I in ('where /R . /T "%~2"') do (
-	  echo %%J | findstr ^[0-9]: > nul
-	  if errorlevel 1 (
-		set SOURCE=%%I-%%J
-	) else (
-		set SOURCE=%%I-0%%J
-	)
-  )
+  for /F "tokens=2,3" %%I in ('where /R . /T "%~2"') do set SOURCE=%%I_%%J
+  echo %SOURCE% | findstr _[0-9]: > nul && set SOURCE=%SOURCE:_=_0%
   if "%SOURCE%" gtr "%TARGET%" exit /b 1
   shift
   if not "%~2" == "" goto :each_source

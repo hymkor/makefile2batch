@@ -41,7 +41,10 @@ func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) 
 	defer fd.Close()
 
 	rules := make(map[string]*Rule)
-	macro := make(map[string]string)
+	macro := map[string]string{
+		"MAKEDIR": "%~dp0.",
+		"MAKE":    "%~dfnx0",
+	}
 	var current *Rule
 	firstentry := ""
 
@@ -215,7 +218,6 @@ func main1(args []string) error {
 	fmt.Fprintln(w, "rem ***")
 	fmt.Fprintln(w, "setlocal")
 	fmt.Fprintln(w, `set "PROMPT=$$ "`)
-	fmt.Fprintln(w, `set "MAKEDIR=%CD%"`)
 	fmt.Fprintln(w, `call :"%1"`)
 	fmt.Fprintln(w, `endlocal`)
 	fmt.Fprintln(w, `exit /b`)

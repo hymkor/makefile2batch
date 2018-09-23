@@ -29,6 +29,9 @@ makefile2batch.exe : main.go
 test:
 	makefile2batch > make.cmd
 
+readme:
+	gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md
+
 clean:
 	if exist make.cmd del make.cmd
 	if exist makefile2batch.exe del makefile2batch.exe
@@ -52,16 +55,8 @@ exit /b
   call :"makefile2batch.exe"
   exit /b
 
-:"clean"
-  @echo on
-  if exist make.cmd del make.cmd
-  if exist makefile2batch.exe del makefile2batch.exe
-  @echo off
-  exit /b
-
 :"makefile2batch.exe"
-  call :test makefile2batch.exe main.go
-  if not errorlevel 1 exit /b
+  call :test makefile2batch.exe main.go && exit /b
   @echo on
   go fmt
   go build -o makefile2batch.exe -ldflags "-s -w"
@@ -77,6 +72,13 @@ exit /b
 :"readme"
   @echo on
   gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md
+  @echo off
+  exit /b
+
+:"clean"
+  @echo on
+  if exist make.cmd del make.cmd
+  if exist makefile2batch.exe del makefile2batch.exe
   @echo off
   exit /b
 

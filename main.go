@@ -167,10 +167,10 @@ func (this *MakeRules) DumpEntry(name string, w io.Writer) bool {
 		}
 		useTest = true
 		fmt.Fprintf(w, "  call :test %s %s && exit /b\n", rule.Target, strings.Join(rule.Sources, " "))
-		this.dumpCode(rule, 2, w)
 	} else {
-		this.dumpCode(rule, 2, w)
+		fmt.Fprintf(w, "  if exist \"%s\" exit /b\n", rule.Target)
 	}
+	this.dumpCode(rule, 2, w)
 	fmt.Fprintln(w, "  exit /b")
 	return useTest
 }
@@ -179,7 +179,7 @@ func dumpTools(w io.Writer) {
 	io.WriteString(w, `
 :test
   if not exist "%~1" exit /b 1
-  if "%~2" == "" exit /b 1
+  if "%~2" == "" exit /b 0
   setlocal
   for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do set TARGET=%%I_%%J
   echo %TARGET% | findstr _[0-9]: > nul && set TARGET=%TARGET:_=_0%

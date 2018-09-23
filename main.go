@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/mattn/go-isatty"
@@ -207,7 +208,12 @@ func main1(args []string) error {
 	fmt.Fprintln(w, "  exit /b")
 
 	useTest := false
+	keys := make([]string, 0, len(rules))
 	for key := range rules {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
 		fmt.Fprintln(w)
 		if dumpEntry(rules, key, w) {
 			useTest = true

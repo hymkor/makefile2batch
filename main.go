@@ -146,8 +146,7 @@ func dumpEntry(rules map[string]*Rule, name string, w io.Writer) bool {
 			}
 		}
 		useTest = true
-		fmt.Fprintf(w, "  call :test %s %s\n", rule.Target, strings.Join(rule.Sources, " "))
-		fmt.Fprintf(w, "  if not errorlevel 1 exit /b\n")
+		fmt.Fprintf(w, "  call :test %s %s && exit /b\n", rule.Target, strings.Join(rule.Sources, " "))
 		dumpCode(rules, rule, 2, w)
 	} else {
 		dumpCode(rules, rule, 2, w)

@@ -29,9 +29,11 @@ type MakeRules struct {
 
 var rxMacro = regexp.MustCompile(`\$[\(\{]\w+[\{\)]`)
 var rxPattern = regexp.MustCompile(`^(\.\w+)(\.\w+)$`)
+var rxDefMacro = regexp.MustCompile(`^(\w+)=(.*)$`)
+
 var makefilePath = flag.String("f", "Makefile", "path of Makefile")
 
-func parse(makefile string, macro map[string]string) (*MakeRules, error) {
+func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) {
 	fd, err := os.Open(makefile)
 	if err != nil {
 		return nil, err
@@ -39,6 +41,7 @@ func parse(makefile string, macro map[string]string) (*MakeRules, error) {
 	defer fd.Close()
 
 	rules := make(map[string]*Rule)
+	macro := make(map[string]string)
 	var current *Rule
 	firstentry := ""
 
@@ -63,12 +66,19 @@ func parse(makefile string, macro map[string]string) (*MakeRules, error) {
 
 		text = rxMacro.ReplaceAllStringFunc(text, func(src string) string {
 			name := src[2 : len(src)-1]
-			if val, ok := macro[name]; ok {
+			if val, ok := cmdlineMacro[name]; ok {
+				return val
+			} else if val, ok := macro[name]; ok {
 				return val
 			} else {
 				return "%" + name + "%"
 			}
 		})
+
+		if m := rxDefMacro.FindStringSubmatch(text); m != nil {
+			macro[m[1]] = strings.TrimSpace(m[2])
+			continue
+		}
 
 		if text[0] == '\t' {
 			if current == nil {

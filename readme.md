@@ -14,7 +14,8 @@ Supported Macros
 * `$*` ... target filename without extension
 * `$<` ... first source filename
 * `$^` ... all source filenames
-* `$(xxxx)` ... the environment variable
+* `$(MAKE)` ... the batchfile name
+* `$(MAKEDIR)` ... the directory where the batchfile exists
 
 Sample
 -------
@@ -49,7 +50,6 @@ rem *** ( https://github.com/zetamatta/makefile2batch )
 rem ***
 setlocal
 set "PROMPT=$$ "
-set "MAKEDIR=%CD%"
 call :"%1"
 endlocal
 exit /b

@@ -139,6 +139,9 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 			rule = r
 		}
 	}
+	if len(rule.Code) <= 0 {
+		return
+	}
 	noextTarget := rule.Target[:len(rule.Target)-len(filepath.Ext(rule.Target))]
 	indents := strings.Repeat(" ", indent)
 	fmt.Fprintf(w, "%s@echo on\n", indents)

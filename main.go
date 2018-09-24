@@ -149,7 +149,14 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 			code1 = strings.Replace(code1, "$<", rule.Sources[0], -1)
 			code1 = strings.Replace(code1, "$^", strings.Join(rule.Sources, " "), -1)
 		}
-		fmt.Fprintf(w, "%s%s\n", indents, code1)
+		fmt.Fprint(w, indents)
+		if code1[0] == '-' { // no error check
+			fmt.Fprintln(w, code1[1:])
+		} else {
+			fmt.Fprintln(w, code1)
+			fmt.Fprint(w, indents)
+			fmt.Fprintln(w, "@if errorlevel 1 echo ERROR %ERRORLEVEL% & echo off & exit /b %ERRORLEVEL%")
+		}
 	}
 	fmt.Fprintf(w, "%s@echo off\n", indents)
 }

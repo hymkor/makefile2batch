@@ -145,6 +145,7 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 	noextTarget := rule.Target[:len(rule.Target)-len(filepath.Ext(rule.Target))]
 	indents := strings.Repeat(" ", indent)
 	fmt.Fprintf(w, "%s@echo on\n", indents)
+	contflag := false
 	for _, code1 := range rule.Code {
 		code1 = strings.Replace(code1, "$@", rule.Target, -1)
 		code1 = strings.Replace(code1, "$*", noextTarget, -1)
@@ -152,13 +153,23 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 			code1 = strings.Replace(code1, "$<", rule.Sources[0], -1)
 			code1 = strings.Replace(code1, "$^", strings.Join(rule.Sources, " "), -1)
 		}
+		if !contflag {
+			fmt.Fprintf(w, "%s@setlocal\n", indents)
+		}
+		if len(code1) >= 1 && code1[len(code1)-1] == '\\' {
+			contflag = true
+			code1 = code1[:len(code1)-1]
+		}
 		fmt.Fprint(w, indents)
-		if code1[0] == '-' { // no error check
+		if len(code1) >= 1 && code1[0] == '-' { // no error check
 			fmt.Fprintln(w, code1[1:])
 		} else {
 			fmt.Fprintln(w, code1)
 			fmt.Fprint(w, indents)
 			fmt.Fprintln(w, "@if errorlevel 1 echo ERROR %ERRORLEVEL% & echo off & exit /b %ERRORLEVEL%")
+		}
+		if !contflag {
+			fmt.Fprintf(w, "%s@endlocal\n", indents)
 		}
 	}
 	fmt.Fprintf(w, "%s@echo off\n", indents)

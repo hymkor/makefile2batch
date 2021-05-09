@@ -15,4 +15,4 @@ clean:
 	if exist makefile2batch.exe del makefile2batch.exe
 
 upgrade:
-	for /F %%I in ('where $(TARGET)') do copy /-Y /v "$(TARGET)" "%%I"
+	for /F "skip=1" %%I in ('where $(TARGET)') do copy /-Y /v "$(TARGET)" "%%I"

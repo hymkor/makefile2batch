@@ -16,6 +16,7 @@ Supported Macros
 * `$^` ... all source filenames
 * `$(MAKE)` ... the batchfile name
 * `$(MAKEDIR)` ... the directory where the batchfile exists
+* `$$` ... replace `$`
 
 Sample
 -------

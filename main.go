@@ -83,6 +83,8 @@ func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) 
 			continue
 		}
 
+		text = strings.ReplaceAll(text, "$$", "$")
+
 		if text[0] == '\t' {
 			if current == nil {
 				return nil, fmt.Errorf("no current target")

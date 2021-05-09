@@ -43,7 +43,7 @@ func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) 
 	rules := make(map[string]*Rule)
 	macro := map[string]string{
 		"MAKEDIR": "%~dp0.",
-		"MAKE":    "%~dfnx0",
+		"MAKE":    "-call %~dfnx0",
 	}
 	var current *Rule
 	firstentry := ""

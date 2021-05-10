@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -10,10 +11,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
-	"github.com/mattn/go-isatty"
+	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/zetamatta/go-texts/mbcs"
+	"github.com/zetamatta/go-windows-mbcs"
 )
 
 type Rule struct {
@@ -48,10 +50,19 @@ func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) 
 	var current *Rule
 	firstentry := ""
 
-	sc := bufio.NewScanner(mbcs.NewAutoDetectReader(fd, mbcs.ACP))
+	sc := bufio.NewScanner(fd) // mbcs.NewAutoDetectReader(fd, mbcs.ACP))
 	contline := ""
 	for sc.Scan() {
-		text := sc.Text()
+		var text string
+		if bytes := sc.Bytes(); utf8.Valid(bytes) {
+			text = sc.Text()
+		} else {
+			text, err = mbcs.AtoU(bytes, mbcs.ACP)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		if len(text) <= 0 {
 			continue
 		}
@@ -214,7 +225,16 @@ func dumpTools(w io.Writer) {
   @endlocal & exit /b 0`)
 }
 
-func main1(args []string) error {
+var crlf = []byte{'\r', '\n'}
+
+var lf = []byte{'\n'}
+
+func lfToCrlf(bin []byte) []byte {
+	bin = bytes.ReplaceAll(bin, crlf, lf)
+	return bytes.ReplaceAll(bin, lf, crlf)
+}
+
+func maings(args []string) (_err error) {
 	macro := map[string]string{}
 	for _, arg := range args {
 		if pos := strings.IndexRune(arg, '='); pos >= 0 {
@@ -227,9 +247,18 @@ func main1(args []string) error {
 	}
 
 	var w io.Writer = os.Stdout
-	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		w = mbcs.NewWriter(os.Stdout, mbcs.ACP)
-		os.Stdout.Sync()
+	if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+		var buffer strings.Builder
+		w = &buffer
+		defer func() {
+			bin, err := mbcs.UtoA(buffer.String(), mbcs.ACP)
+			if err != nil {
+				_err = err
+			} else {
+				os.Stdout.Write(lfToCrlf(bin))
+				os.Stdout.Sync()
+			}
+		}()
 	}
 
 	fmt.Fprintln(w, "@rem ***")
@@ -266,7 +295,7 @@ func main1(args []string) error {
 
 func main() {
 	flag.Parse()
-	if err := main1(flag.Args()); err != nil {
+	if err := maings(flag.Args()); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}

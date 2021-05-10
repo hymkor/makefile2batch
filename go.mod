@@ -3,6 +3,7 @@ module github.com/zetamatta/makefile2batch
 go 1.16
 
 require (
-	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/zetamatta/go-texts v1.0.2-0.20201218182153-c44cab7ed4ae // indirect
+	github.com/zetamatta/go-windows-mbcs v0.0.0-20201115030200-c402c343cd13
+	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
+	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
 )

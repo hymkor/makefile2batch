@@ -6,6 +6,10 @@ Makefile to Batchfile converter.
 ```
 $ makefile2batch [-f Makefile] {MACRO=VALUE} > make.cmd
 ```
+OR
+```
+$ makefile2batch [-f Makefile] [-o make.cmd] {MACRO=VALUE}
+```
 
 Supported Macros
 ----------------
@@ -14,8 +18,8 @@ Supported Macros
 * `$*` ... target filename without extension
 * `$<` ... first source filename
 * `$^` ... all source filenames
-* `$(MAKE)` ... the batchfile name
-* `$(MAKEDIR)` ... the directory where the batchfile exists
+* `$(MAKE)` ... `CMD /C %~f0`
+* `$(MAKEDIR)` ... `%~dp0`
 * `$$` ... replace `$`
 
 Sample

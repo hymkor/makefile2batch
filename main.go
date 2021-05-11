@@ -234,6 +234,8 @@ func lfToCrlf(bin []byte) []byte {
 	return bytes.ReplaceAll(bin, lf, crlf)
 }
 
+var flagOutputFile = flag.String("o", "", "output file")
+
 func mains(args []string) (_err error) {
 	macro := map[string]string{}
 	for _, arg := range args {
@@ -247,17 +249,31 @@ func mains(args []string) (_err error) {
 	}
 
 	var w io.Writer = os.Stdout
-	if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+	if *flagOutputFile != "" {
 		var buffer strings.Builder
 		w = &buffer
 		defer func() {
 			bin, err := mbcs.UtoA(buffer.String(), mbcs.ACP)
 			if err != nil {
 				_err = err
-			} else {
-				os.Stdout.Write(lfToCrlf(bin))
-				os.Stdout.Sync()
+				return
 			}
+			err = os.WriteFile(*flagOutputFile, lfToCrlf(bin), 0666)
+			if err != nil {
+				_err = err
+			}
+		}()
+	} else if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+		var buffer strings.Builder
+		w = &buffer
+		defer func() {
+			bin, err := mbcs.UtoA(buffer.String(), mbcs.ACP)
+			if err != nil {
+				_err = err
+				return
+			}
+			os.Stdout.Write(lfToCrlf(bin))
+			os.Stdout.Sync()
 		}()
 	}
 

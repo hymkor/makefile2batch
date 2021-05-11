@@ -234,7 +234,7 @@ func lfToCrlf(bin []byte) []byte {
 	return bytes.ReplaceAll(bin, lf, crlf)
 }
 
-func maings(args []string) (_err error) {
+func mains(args []string) (_err error) {
 	macro := map[string]string{}
 	for _, arg := range args {
 		if pos := strings.IndexRune(arg, '='); pos >= 0 {
@@ -295,7 +295,7 @@ func maings(args []string) (_err error) {
 
 func main() {
 	flag.Parse()
-	if err := maings(flag.Args()); err != nil {
+	if err := mains(flag.Args()); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}

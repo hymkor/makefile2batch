@@ -198,9 +198,9 @@ func (this *MakeRules) DumpEntry(name string, w io.Writer) bool {
 			}
 		}
 		useTest = true
-		fmt.Fprintf(w, "  @call :test %s %s && @exit /b\n", rule.Target, strings.Join(rule.Sources, " "))
+		fmt.Fprintf(w, "  @call :test %[1]s %[2]s && @echo '%%~f0': '%[1]s' is up to date. & @exit /b\n", rule.Target, strings.Join(rule.Sources, " "))
 	} else {
-		fmt.Fprintf(w, "  @if exist \"%s\" @exit /b\n", rule.Target)
+		fmt.Fprintf(w, "  @if exist \"%[1]s\" @echo '%%~f0': '%[1]s' is up to date. & @exit /b\n", rule.Target)
 	}
 	this.dumpCode(rule, 2, w)
 	fmt.Fprintln(w, "  @exit /b")

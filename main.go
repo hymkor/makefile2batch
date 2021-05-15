@@ -191,6 +191,7 @@ func (this *MakeRules) DumpEntry(name string, w io.Writer) bool {
 	useTest := false
 	fmt.Fprintf(w, ":\"%s\"\n", name)
 	rule := rules[name]
+	fmt.Fprintf(w, "  @rem *** %s: %s ***\n", rule.Target, strings.Join(rule.Sources, " "))
 	if len(rule.Sources) > 0 {
 		for _, source1 := range rule.Sources {
 			if _, ok := rules[source1]; ok {

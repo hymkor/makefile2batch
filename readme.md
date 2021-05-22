@@ -57,64 +57,46 @@ upgrade:
 @rem ***
 @setlocal
 @set "PROMPT=$$ "
-@call :"%1"
+@call :"%~1"
 @endlocal
-@exit /b
+@exit /b %ERRORLEVEL%
 :""
   @call :"makefile2batch.exe"
-  @exit /b
+  @exit /b %ERRORLEVEL%
+:errpt
+  @echo ERROR %ERRORLEVEL%
+  @exit /b %ERRORLEVEL%
 
 :"clean"
-  @if exist "clean" @exit /b
-  @setlocal
-  if exist make.cmd del make.cmd
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
-  @setlocal
-  if exist makefile2batch.exe del makefile2batch.exe
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
+  @if exist "clean" @echo '%~f0': 'clean' is up to date. & @exit /b
+  if exist make.cmd del make.cmd || goto errpt
+  if exist makefile2batch.exe del makefile2batch.exe || goto errpt
   @exit /b
 
 :"makefile2batch.exe"
-  @call :test makefile2batch.exe main.go && @exit /b
-  @setlocal
-  go fmt
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
-  @setlocal
-  go build -o makefile2batch.exe -ldflags "-s -w"
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
+  @call :test makefile2batch.exe main.go && @echo '%~f0': 'makefile2batch.exe' is up to date. & @exit /b
+  go fmt || goto errpt
+  go build -o makefile2batch.exe -ldflags "-s -w" || goto errpt
   @exit /b
 
 :"readme"
-  @if exist "readme" @exit /b
-  @setlocal
-  gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
+  @if exist "readme" @echo '%~f0': 'readme' is up to date. & @exit /b
+  gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md || goto errpt
   @exit /b
 
 :"test"
-  @if exist "test" @exit /b
-  @setlocal
-  makefile2batch > make.cmd
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
+  @if exist "test" @echo '%~f0': 'test' is up to date. & @exit /b
+  makefile2batch > make.cmd || goto errpt
   @exit /b
 
 :"upgrade"
-  @if exist "upgrade" @exit /b
-  @setlocal
-  for /F "skip=1" %%I in ('where makefile2batch.exe') do copy /-Y /v "makefile2batch.exe" "%%I"
-  @if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%
-  @endlocal
+  @if exist "upgrade" @echo '%~f0': 'upgrade' is up to date. & @exit /b
+  for /F "skip=1" %%I in ('where makefile2batch.exe') do copy /-Y /v "makefile2batch.exe" "%%I" || goto errpt
   @exit /b
 
 :test
-  @if not exist "%~1" exit /b 1
-  @if "%~2" == "" exit /b 0
+  @if not exist "%~1" @exit /b 1
+  @if "%~2" == "" @exit /b 0
   @setlocal
   @for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do @set TARGET=%%I_%%J
   @echo %TARGET% | findstr _[0-9]: > nul && set TARGET=%TARGET:_=_0%
@@ -125,5 +107,5 @@ upgrade:
   @if "%SOURCE%" gtr "%TARGET%" @exit /b 1
   @shift
   @if not "%~2" == "" goto :each_source
-  @endlocal & exit /b 0
+  @endlocal & @exit /b 0
 ```

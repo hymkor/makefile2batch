@@ -70,7 +70,9 @@ func parse(makefile string, cmdlineMacro map[string]string) (*MakeRules, error) 
 			continue
 		}
 
-		text = contline + text
+		if len(contline) > 0 {
+			text = contline + strings.TrimLeft(text, " \t")
+		}
 		if strings.HasSuffix(text, "\\") {
 			contline = text[:len(text)-1]
 			continue

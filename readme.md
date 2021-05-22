@@ -4,12 +4,14 @@ makefile2batch
 Makefile to Batchfile converter.
 
 ```
-$ makefile2batch [-f Makefile] {MACRO=VALUE} > make.cmd
+$ makefile2batch [-f Makefile] [-dont-keep-env] {MACRO=VALUE} > make.cmd
 ```
 OR
 ```
-$ makefile2batch [-f Makefile] [-o make.cmd] {MACRO=VALUE}
+$ makefile2batch [-f Makefile] [-dont-keep-env] [-o make.cmd] {MACRO=VALUE}
 ```
+
+* `-dont-keep-env` ... enclose the each command of the action with setlocal and endlocal
 
 Supported Macros
 ----------------

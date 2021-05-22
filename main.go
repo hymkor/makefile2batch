@@ -210,8 +210,8 @@ func (this *MakeRules) DumpEntry(name string, w io.Writer) bool {
 func dumpTools(w io.Writer) {
 	io.WriteString(w, `
 :test
-  @if not exist "%~1" exit /b 1
-  @if "%~2" == "" exit /b 0
+  @if not exist "%~1" @exit /b 1
+  @if "%~2" == "" @exit /b 0
   @setlocal
   @for /F "tokens=2,3" %%I in ('where /R . /T "%~1"') do @set TARGET=%%I_%%J
   @echo %TARGET% | findstr _[0-9]: > nul && set TARGET=%TARGET:_=_0%
@@ -222,7 +222,7 @@ func dumpTools(w io.Writer) {
   @if "%SOURCE%" gtr "%TARGET%" @exit /b 1
   @shift
   @if not "%~2" == "" goto :each_source
-  @endlocal & exit /b 0`)
+  @endlocal & @exit /b 0`)
 }
 
 var crlf = []byte{'\r', '\n'}
@@ -288,13 +288,13 @@ func mains(args []string) (_err error) {
 	fmt.Fprintln(w, `@set "PROMPT=$$ "`)
 	fmt.Fprintln(w, `@call :"%~1"`)
 	fmt.Fprintln(w, `@endlocal`)
-	fmt.Fprintln(w, `@exit /b`)
+	fmt.Fprintln(w, `@exit /b %ERRORLEVEL%`)
 	fmt.Fprintln(w, `:""`)
 	fmt.Fprintf(w, "  @call :\"%s\"\n", makerules.DefaultEntry)
-	fmt.Fprintln(w, "  @exit /b")
+	fmt.Fprintln(w, "  @exit /b %ERRORLEVEL%")
 	fmt.Fprintln(w, ":errpt")
 	fmt.Fprintln(w, "  @echo ERROR %ERRORLEVEL%")
-	fmt.Fprintln(w, "  exit /b %ERRORLEVEL%")
+	fmt.Fprintln(w, "  @exit /b %ERRORLEVEL%")
 
 	useTest := false
 	keys := make([]string, 0, len(makerules.Rules))

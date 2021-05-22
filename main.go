@@ -178,9 +178,7 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 		if len(code1) >= 1 && code1[0] == '-' { // no error check
 			fmt.Fprintln(w, code1[1:])
 		} else {
-			fmt.Fprintln(w, code1)
-			fmt.Fprint(w, indents)
-			fmt.Fprintln(w, "@if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%")
+			fmt.Fprintf(w, "%s || goto errpt\n", code1)
 		}
 		if !contflag && *flagDontKeepEnv {
 			fmt.Fprintf(w, "%s@endlocal\n", indents)
@@ -295,6 +293,9 @@ func mains(args []string) (_err error) {
 	fmt.Fprintln(w, `:""`)
 	fmt.Fprintf(w, "  @call :\"%s\"\n", makerules.DefaultEntry)
 	fmt.Fprintln(w, "  @exit /b")
+	fmt.Fprintln(w, ":errpt")
+	fmt.Fprintln(w, "  @echo ERROR %ERRORLEVEL%")
+	fmt.Fprintln(w, "  exit /b %ERRORLEVEL%")
 
 	useTest := false
 	keys := make([]string, 0, len(makerules.Rules))

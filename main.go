@@ -286,7 +286,7 @@ func mains(args []string) (_err error) {
 	fmt.Fprintln(w, "@rem ***")
 	fmt.Fprintln(w, "@setlocal")
 	fmt.Fprintln(w, `@set "PROMPT=$$ "`)
-	fmt.Fprintln(w, `@call :"%1"`)
+	fmt.Fprintln(w, `@call :"%~1"`)
 	fmt.Fprintln(w, `@endlocal`)
 	fmt.Fprintln(w, `@exit /b`)
 	fmt.Fprintln(w, `:""`)

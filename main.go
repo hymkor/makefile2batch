@@ -167,7 +167,7 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 			code1 = strings.Replace(code1, "$<", rule.Sources[0], -1)
 			code1 = strings.Replace(code1, "$^", strings.Join(rule.Sources, " "), -1)
 		}
-		if !contflag {
+		if !contflag && *flagDontKeepEnv {
 			fmt.Fprintf(w, "%s@setlocal\n", indents)
 		}
 		if len(code1) >= 1 && code1[len(code1)-1] == '\\' {
@@ -182,7 +182,7 @@ func (this *MakeRules) dumpCode(rule *Rule, indent int, w io.Writer) {
 			fmt.Fprint(w, indents)
 			fmt.Fprintln(w, "@if errorlevel 1 echo ERROR %ERRORLEVEL% & exit /b %ERRORLEVEL%")
 		}
-		if !contflag {
+		if !contflag && *flagDontKeepEnv {
 			fmt.Fprintf(w, "%s@endlocal\n", indents)
 		}
 	}
@@ -237,7 +237,10 @@ func lfToCrlf(bin []byte) []byte {
 	return bytes.ReplaceAll(bin, lf, crlf)
 }
 
-var flagOutputFile = flag.String("o", "", "output file")
+var (
+	flagOutputFile  = flag.String("o", "", "output file")
+	flagDontKeepEnv = flag.Bool("dont-keep-env", false, "do not enclose the each line with setlocal and endlocal")
+)
 
 func mains(args []string) (_err error) {
 	macro := map[string]string{}

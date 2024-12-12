@@ -1,4 +1,5 @@
 TARGET=makefile2batch.exe
+SHELL=CMD.exe
 
 $(TARGET): main.go
 	go fmt

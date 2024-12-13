@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/nyaosorg/go-windows-mbcs"
 )
@@ -266,7 +266,7 @@ func mains(args []string) (_err error) {
 				_err = err
 			}
 		}()
-	} else if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+	} else if !term.IsTerminal(int(os.Stdout.Fd())) {
 		var buffer strings.Builder
 		w = &buffer
 		defer func() {

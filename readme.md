@@ -31,6 +31,7 @@ Sample
 
 ```Makefile
 TARGET=makefile2batch.exe
+SHELL=CMD.exe
 
 $(TARGET): main.go
 	go fmt
@@ -38,9 +39,6 @@ $(TARGET): main.go
 
 test:
 	makefile2batch > make.cmd
-
-readme:
-	gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md
 
 clean:
 	if exist make.cmd del make.cmd
@@ -79,11 +77,6 @@ upgrade:
   @call :test makefile2batch.exe main.go && @echo '%~f0': 'makefile2batch.exe' is up to date. & @exit /b
   go fmt || goto errpt
   go build -o makefile2batch.exe -ldflags "-s -w" || goto errpt
-  @exit /b
-
-:"readme"
-  @if exist "readme" @echo '%~f0': 'readme' is up to date. & @exit /b
-  gawk "/^```make.cmd/{ print $0 ; while( getline < \"make.cmd\" ){ print } ; print \"```\" ; exit } ; 1" readme.md | nkf32 -Lu > readme.new && move readme.new readme.md || goto errpt
   @exit /b
 
 :"test"
